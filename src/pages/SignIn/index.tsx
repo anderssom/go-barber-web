@@ -1,5 +1,10 @@
-import React from 'react';
+import React, {useCallback, useRef} from 'react';
 import { FiLogIn, FiMail, FiLock} from 'react-icons/fi';
+import { Form } from '@unform/web';
+import { FormHandles } from '@unform/core';
+import * as Yup from 'yup';
+
+import getValidationErrors from '../../utils/getValidationErrors';
 
 import logoImg from '../../assets/logo.svg';
 
@@ -9,22 +14,46 @@ import Buttton from '../../components/Button';
 
 import { Container, Content, Background } from './style';
 
-const SignIn: React.FC = () => (
+const SignIn: React.FC = () => {
+        const formRef = useRef<FormHandles>(null);
+    
+       const handleSubmit = useCallback( async  (data: object)=> {
+    
+            try {
+                formRef.current?.setErrors({});
+    
+                const schema = Yup.object().shape({
+                    email: Yup.string().required('E-mail Obrigatório').email('Digite um e-mail válido'),
+                    password: Yup.string().required('Senha Obrigatório')
+                });
+    
+                await schema.validate(data, {
+                    abortEarly: false,}
+                    );
+            } catch (err: Yup.ValidationError | any){
+                console.log(err);         
+    
+                const errors = getValidationErrors(err);
+    
+                formRef.current?.setErrors(errors);
+            }
+        }, [] );
+    return (
     <Container>
         <Content>
             <img src={logoImg} alt="GoBarber" />
 
-            <form>
+            <Form ref={formRef} onSubmit={handleSubmit}>
                 <h1>Faça seu logon</h1>
 
-                <Input name="E-mail" icon={FiMail} placeholder="E-mail" />
+                <Input name="email" icon={FiMail} placeholder="E-mail" />
 
                 <Input name="password" icon={FiLock} type="password" placeholder="Senha" />
 
                 <Buttton type="submit">Entra</Buttton>
 
                 <a href="a">Esqueci minha senha</a>
-            </form>
+            </Form >
             <a href="login">
                     <FiLogIn/>
                     Criar conta</a>
@@ -32,6 +61,6 @@ const SignIn: React.FC = () => (
 
         <Background></Background>
     </Container>
-);
-
+    );
+}
 export default SignIn;
